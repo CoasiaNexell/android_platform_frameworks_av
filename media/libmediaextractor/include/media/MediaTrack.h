@@ -72,6 +72,10 @@ struct MediaTrack
             SEEK_CLOSEST_SYNC,
             SEEK_CLOSEST,
             SEEK_FRAME_INDEX,
+            SEEK_PREVIOUS_SYNC_VIDEO_ONLY,
+            SEEK_NEXT_SYNC_VIDEO_ONLY,
+            SEEK_CLOSEST_SYNC_VIDEO_ONLY,
+            SEEK_CLOSEST_VIDEO_ONLY,
         };
 
         ReadOptions();

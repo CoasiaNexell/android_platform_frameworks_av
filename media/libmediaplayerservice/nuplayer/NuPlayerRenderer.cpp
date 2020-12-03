@@ -136,6 +136,8 @@ NuPlayer::Renderer::Renderer(
     CHECK(mediaClock != NULL);
     mPlaybackRate = mPlaybackSettings.mSpeed;
     mMediaClock->setPlaybackRate(mPlaybackRate);
+
+    mVideoInNum = 0;
 }
 
 NuPlayer::Renderer::~Renderer() {
@@ -1332,7 +1334,19 @@ void NuPlayer::Renderer::onDrainVideoQueue() {
 
     if (!mPaused) {
         setVideoLateByUs(nowUs - realTimeUs);
+#if 1
         tooLate = (mVideoLateByUs > 40000);
+#else
+        mVideoInNum++;
+        if(mVideoInNum > 30)
+        {
+            tooLate = (mVideoLateByUs > 100000);
+        }
+        else
+        {
+            tooLate = (mVideoLateByUs > 1000000);
+        }
+#endif
 
         if (tooLate) {
             ALOGV("video late by %lld us (%.2f secs)",

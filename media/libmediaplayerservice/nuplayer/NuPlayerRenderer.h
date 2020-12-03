@@ -185,6 +185,7 @@ private:
     bool mNotifyCompleteVideo;
 
     bool mSyncQueues;
+    int64_t mVideoInNum;
 
     // modified on only renderer's thread.
     bool mPaused;

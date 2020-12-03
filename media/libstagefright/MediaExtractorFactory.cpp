@@ -34,6 +34,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 
+
 namespace android {
 
 // static
@@ -133,6 +134,21 @@ MediaExtractor::CreatorFunc MediaExtractorFactory::sniff(
     *confidence = 0.0f;
     *meta = nullptr;
 
+#ifdef ENABLE_FFMPEG_EXTRACTOR
+  //use aosp-mkv, nx-mkv(ffmpegMkv)
+  //defaul aosp-mkv
+    char value[PROPERTY_VALUE_MAX];
+    bool nxmkv_mode = false;
+    if (property_get("nxmkv.mode", value, "0") )
+    {
+        if ( !strcmp(value, "1") )
+        {
+            nxmkv_mode = true;
+            ALOGI("%s : Use nxmkv mode\n", __func__);
+        }
+    }
+#endif
+
     std::shared_ptr<List<sp<ExtractorPlugin>>> plugins;
     {
         Mutex::Autolock autoLock(gPluginMutex);
@@ -159,6 +175,20 @@ MediaExtractor::CreatorFunc MediaExtractorFactory::sniff(
         void *newMeta = nullptr;
         MediaExtractor::FreeMetaFunc newFreeMeta = nullptr;
         if ((curCreator = (*it)->def.sniff(source, &newConfidence, &newMeta, &newFreeMeta))) {
+
+#ifdef ENABLE_FFMPEG_EXTRACTOR
+            if(nxmkv_mode == true) {
+                if (!strcmp("/system/lib/extractors/libmkvextractor.so", (*it)->libPath.string())) {
+                    newConfidence = 0.0;
+                }
+            }
+            else if(nxmkv_mode == false) {
+                if (!strcmp("/vendor/lib/extractors/libNX_FFMpegMKVExtractor.so", (*it)->libPath.string())) {
+                    newConfidence = 0.0;
+                }
+            }
+#endif
+
             if (newConfidence > *confidence) {
                 *confidence = newConfidence;
                 if (*meta != nullptr && *freeMeta != nullptr) {
@@ -386,6 +416,7 @@ void MediaExtractorFactory::UpdateExtractors(const char *newUpdateApkPath) {
     RegisterExtractorsInSystem("/system/lib/extractors/libmp4extractor.so", *newList);
 #ifdef ENABLE_FFMPEG_EXTRACTOR
     RegisterExtractorsInSystem("/vendor/lib/extractors/libNX_FFMpegMKVExtractor.so", *newList);
+    RegisterExtractorsInSystem("/system/lib/extractors/libmkvextractor.so", *newList);
 #else
     RegisterExtractorsInSystem("/system/lib/extractors/libmkvextractor.so", *newList);
 #endif

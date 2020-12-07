@@ -1132,6 +1132,17 @@ void NuPlayer::GenericSource::onSeek(const sp<AMessage>& msg) {
 }
 
 status_t NuPlayer::GenericSource::doSeek(int64_t seekTimeUs, MediaPlayerSeekMode mode) {
+
+#ifdef ENABLE_VIDEO_ONLY_SEEK
+    // This patch has been modified to seek only video when using setSurface() (home->app)
+    bool isVideoOnly = false;
+
+    if (mode >= MediaPlayerSeekMode::SEEK_PREVIOUS_SYNC_VIDEO_ONLY) {
+        mode = (MediaPlayerSeekMode)(mode - MediaPlayerSeekMode::SEEK_PREVIOUS_SYNC_VIDEO_ONLY);
+        isVideoOnly = true;
+    }
+#endif
+
     if (mVideoTrack.mSource != NULL) {
         ++mVideoDataGeneration;
 
@@ -1144,11 +1155,21 @@ status_t NuPlayer::GenericSource::doSeek(int64_t seekTimeUs, MediaPlayerSeekMode
         mVideoLastDequeueTimeUs = actualTimeUs;
     }
 
+#ifdef ENABLE_VIDEO_ONLY_SEEK
+    if (isVideoOnly == false) {
+        if (mAudioTrack.mSource != NULL) {
+            ++mAudioDataGeneration;
+            readBuffer(MEDIA_TRACK_TYPE_AUDIO, seekTimeUs, MediaPlayerSeekMode::SEEK_CLOSEST);
+            mAudioLastDequeueTimeUs = seekTimeUs;
+        }
+    }
+#else
     if (mAudioTrack.mSource != NULL) {
         ++mAudioDataGeneration;
         readBuffer(MEDIA_TRACK_TYPE_AUDIO, seekTimeUs, MediaPlayerSeekMode::SEEK_CLOSEST);
         mAudioLastDequeueTimeUs = seekTimeUs;
     }
+#endif
 
     if (mSubtitleTrack.mSource != NULL) {
         mSubtitleTrack.mPackets->clear();

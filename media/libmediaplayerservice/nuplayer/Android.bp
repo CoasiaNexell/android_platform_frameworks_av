@@ -40,7 +40,10 @@ cc_library_static {
             cflags: [
                 "-DENABLE_STAGEFRIGHT_EXPERIMENTS",
             ],
-        }
+        },
+        en_VideoOnlySeek: {
+            cppflags: ["-DENABLE_VIDEO_ONLY_SEEK"],
+        },
     },
 
     shared_libs: [

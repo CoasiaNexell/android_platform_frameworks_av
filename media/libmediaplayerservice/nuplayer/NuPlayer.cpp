@@ -777,9 +777,16 @@ void NuPlayer::onMessageReceived(const sp<AMessage> &msg) {
             }
 
             mDeferredActions.push_back(
+#ifdef ENABLE_VIDEO_ONLY_SEEK
+                    //This patch has been modified to seek only video when using setSurface() (home->app)
+                    new FlushDecoderAction(
+                                           (FLUSH_CMD_NONE) /* audio */,
+                                           FLUSH_CMD_SHUTDOWN /* video */));
+#else
                     new FlushDecoderAction(
                             (obj != NULL ? FLUSH_CMD_FLUSH : FLUSH_CMD_NONE) /* audio */,
                                            FLUSH_CMD_SHUTDOWN /* video */));
+#endif
 
             mDeferredActions.push_back(new SetSurfaceAction(surface));
 
@@ -791,9 +798,17 @@ void NuPlayer::onMessageReceived(const sp<AMessage> &msg) {
                     // do not perform a seek as it is not needed.
                     int64_t currentPositionUs = 0;
                     if (getCurrentPosition(&currentPositionUs) == OK) {
+#ifdef ENABLE_VIDEO_ONLY_SEEK
+                        //This patch has been modified to seek only video when using setSurface() (home->app)
+                        mDeferredActions.push_back(
+                                new SeekAction(currentPositionUs,
+                                        MediaPlayerSeekMode::SEEK_CLOSEST_SYNC_VIDEO_ONLY /*SEEK_PREVIOUS_SYNC*/ /* mode */));
+
+#else
                         mDeferredActions.push_back(
                                 new SeekAction(currentPositionUs,
                                         MediaPlayerSeekMode::SEEK_PREVIOUS_SYNC /* mode */));
+#endif
                     }
                 }
 

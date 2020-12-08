@@ -2,6 +2,12 @@ cc_library {
     name: "libmediaextractor",
     vendor_available: true,
 
+    product_variables: {
+        en_VideoOnlySeek: {
+            cppflags: ["-DENABLE_VIDEO_ONLY_SEEK"],
+        },
+    },
+
     include_dirs: [
         "frameworks/av/include",
         "frameworks/av/media/libmediaextractor/include",
